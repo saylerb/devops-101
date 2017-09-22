@@ -45,15 +45,16 @@ AWS provides an easy way for generating a public private key pair. When you crea
 - go to EC2 in the services tab
 - select key pairs in the side bar
 - create a key pair, call it 'main'
-- your browser should have downloaded a file (or you may be prompted to do so), this is the private key.
-- place your private key in the `~/.ssh` directory
-- set the correct permissions on the key:
+- your browser should have downloaded a file (or you may be prompted to do so),
+  this is the private key.
+- place your private key in the `~/.ssh` directory mkdir -p ~/.ssh mv
+  ~/Downloads/main.pem ~/.ssh
 
-        chmod 400 ~/.ssh/main.pem
-	
-	
-		
-		
+- set the correct permissions on the key: chmod 400 ~/.ssh/main.pem
+
+
+
+
 ## Create a virtual private cloud
 Now let's start building something. 
 
@@ -65,6 +66,12 @@ Once again, ensure that your AWS region is set to Ireland. Then go to VPC in the
 There's a default VPC, a couple of subnets, a route table, internet gateway, and so on.
 
 In order to work with a clean slate, and to un-clutter your understanding of what is going on, I would recommend removing the default VPC (causing all it's associated resources to also be removed). Don't panic, if you want a default VPC again later down the track, you can contact AWS support. 
+
+	go to your VPCs
+	select the default VPC
+	go to 'Actions' and choose 'Delete VPC'
+	tick 'Delete VPN Connection when deleting the VPC'
+	tick 'I acknowlege that I want to delete my default VPC'
 
 Have a look and ensure that there are no longer any resources lying around (except a DHCP option set).
 Now we'll be creating our VPC and associated resources:
@@ -114,6 +121,8 @@ So you've got a route table routing traffic from your subnet. But it's still not
 - create an internet gateway
 - name it devops-part-one
 - now attach it to your VPC
+    go to 'Attach to VPC'
+    select your 'devops-part-one' VPC from the list and click 'Yes, Attach'
 
 Great, you've got an internet gateway! Look at you! But it's still not doing anything, you need to route internet destined traffic from your subnet to the internet gateway:
 
@@ -162,7 +171,7 @@ You're doing so well, don't give up!
 - go to the 'Instances' section in the left hand pane
 - launch an instance
 - go to 'AWS Market Place' in the left hand pane
-- search for 'Ubuntu Server 12.04 LTS' and select it
+- search for 'Ubuntu Server 14.04 LTS' and select it
 - select micro instance
 - leave all default options
 - go next and leave defaults until 'Tag Instance'
@@ -184,13 +193,21 @@ When you launch your EC2 instance you'll notice that it only has a private IP ad
 - go to the 'Elastic IPs' section in the left hand pane
 - allocate new address
 - associate address to your new instance
+#### TODO: Add steps on how to associate the address to the instance
+  - select the Elastic IP that you just created
+  - go to actions button -> click on 'Associate address'
+  - In the instance dropdown menu, select the instance you provisioned earlier
+  - The private IP field will be populated automagically
+
+#### TODO:  Start here
 
 ## Allow SSH connections to your EC2 instance
 Now you can talk to your instance from the outside world. You could now try to SSH to your instance, but it still wouldn't work, because we've completely locked down traffic to and from the instance. A completely locked down instance isn't much use, let's open up what we need:
 
 - go to VPC in the services tab
 - go to the 'Network ACL' section in the left hand pane
-- go to the 'inbound rules' tab
+- select the ACL we created earlier
+- in the menu below, go to the 'inbound rules' tab
 - add a rule to let SSH traffic into your subnet
 
 	|rule|type|source|
