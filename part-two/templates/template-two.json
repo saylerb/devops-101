@@ -18,7 +18,7 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "CidrBlock" : "10.0.0.0/24",
-        "AvailabilityZone" : "eu-west-1a",
+        "AvailabilityZone" : "us-east-1a",
         "Tags" : [ {"Key" : "Name", "Value" : "devops-part-two"} ]
       }
     },
@@ -133,7 +133,7 @@
     "EC2Instance" : {
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
-        "ImageId" : "ami-20bd1f57",
+        "ImageId" : "ami-179db56c",
         "InstanceType" : "t1.micro",
         "KeyName" : "main",
         "SubnetId" : { "Ref" : "Subnet" },
