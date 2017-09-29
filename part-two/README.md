@@ -155,7 +155,7 @@ You may have noticed that there are some resources declared in the template that
 |NetworkACLEntry|We describe a network ACL resource, and this resource allocates entries to it|
 |SubnetNetworkAclAssociation|This resource lets you associate the network ACL resource with the subnet resource|
 
-Note that if you are **not** using Ireland as your location, you will need to edit the file to change the `availibilityZone` and `ImageId` values to your specific region.
+Note that if you are **not** using Ireland as your location, you will need to edit the file to change the `AvailabilityZone` and `ImageId` values to your specific region.
 
 #### Build the infrastructure
 
