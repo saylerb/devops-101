@@ -1,0 +1,117 @@
+---
+
+- hosts: all
+
+  tasks:
+
+  - name: ensure apt cache is up to date
+    apt: update_cache=yes
+    sudo: true
+    # sudo apt-get update
+
+  - name: ensure all packages are up to date
+    apt: upgrade=dist
+    sudo: true
+    # sudo apt-get dist-upgrade
+
+  - name: ensure that java is installed
+    apt: name=openjdk-7-jdk state=present
+    sudo: true
+    # install java 8:
+    # sudo add-apt-repository ppa:openjdk-r/ppa
+    # sudo apt-get update
+    # sudo apt-get install -y openjdk-8-jre
+
+    # instead of installing java 7:
+    # sudo apt-get install openjdk-7-jdk
+
+  - name: ensure that unzip is installed
+    apt: name=unzip update_cache=yes state=present
+    sudo: true
+    # sudo apt-get update
+    # sudo apt-get install unzip
+
+  - name: reboot if required
+    command: /sbin/reboot removes=/var/run/reboot-required
+    sudo: true
+    # sudo /sbin/reboot # if cat /var/run/reboot-required prints out "*** System restart required ***"
+
+  - name: wait for host in case reboot occured
+    local_action: wait_for host={{ inventory_hostname }} port=22
+
+
+- hosts: ci-master
+
+  tasks:
+
+  - name: ensure the instance hostname is set to ci-master
+    hostname: name=ci-master
+    sudo: true
+    # cat /etc/hostname # should output: 
+    # ci-master
+
+    # ad-hoc ansible task:
+    # ansible all -i "[hostname-or-public ip]," -m hostname --args 'name=ci-master' -u ubuntu --become --private-key="~/.ssh/main.pem"
+    #
+    # sudo vim /etc/homename 
+    # change to 'ci-master'
+
+  - name: ensure that the hosts file has the hostname ci-master
+    lineinfile: dest=/etc/hosts regexp='^127\.0\.0\.1 localhost' line="127.0.0.1 localhost ci-master"
+    sudo: true
+    # cat /etc/hosts # should output this on the first line:
+    # 127.0.0.1 localhost ci-master
+
+  - name: ensure that the go server deb has been downloaded
+    - get_url: url=http://download.gocd.org/binaries/17.10.0-5380/deb/go-server_17.10.0-5380_all.deb dest=/tmp/go-server.deb
+    # I couldn't get downloading the deb to work, so I decided to go with GoCD's instructions:
+    #
+    # echo "deb https://download.gocd.org /" | sudo tee /etc/apt/sources.list.d/gocd.list
+    # curl https://download.gocd.org/GOCD-GPG-KEY.asc | sudo apt-key add -
+    # sudo apt-get update
+    # sudo apt-get install go-server
+    #
+
+  - name: ensure that the go server deb has been installed
+    raw: sudo dpkg --force-confold -i /tmp/go-server.deb
+
+  - name: ensure that the go server is running
+    service: name=go-server state=started
+    sudo: true
+
+    # sudo /etc/init.d/go-server start
+     
+
+- hosts: ci-slave
+
+  tasks:
+
+  - name: ensure the instance hostname is set to ci-slave
+    hostname: name=ci-slave
+    sudo: true
+
+  - name: ensure that the hosts file has the hostname ci-slave
+    lineinfile: dest=/etc/hosts regexp='^127\.0\.0\.1 localhost' line="127.0.0.1 localhost ci-slave"
+    sudo: true
+
+  - name: ensure that the go agent deb has been downloaded
+    get_url: url=https://download.gocd.org/binaries/17.10.0-5380/deb/go-agent_17.10.0-5380_all.deb dest=/tmp/go-agent.deb
+
+  - name: ensure that the go agent deb has been installed
+    raw: sudo dpkg --force-confold -i /tmp/go-agent.deb
+
+  - name: ensure that the go agent is running
+    service: name=go-agent state=started
+    sudo: true
+
+  - name: ensure that the go agent knows where to find the go server
+    lineinfile: dest=/etc/default/go-agent regexp='^GO_SERVER=' line="GO_SERVER={{ ci_master_private_ip }}"
+    notify: restart the go agent
+    sudo: true
+
+
+  handlers:
+
+  - name: restart the go agent
+    service: name=go-agent state=restarted
+    sudo: true
